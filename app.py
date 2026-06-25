@@ -4,6 +4,8 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
+from app_functions import build_currency_list, convert
+
 load_dotenv()
 
 st.title("Convertisseur de devises")
@@ -20,13 +22,7 @@ def get_rates():
 
 
 rates = get_rates()
-
-currencies = list(rates.keys())
-
-nouvelles_devises = ["GBP", "CAD"]
-for devise in nouvelles_devises:
-    if devise in rates and devise not in currencies:
-        currencies.append(devise)
+currencies = build_currency_list(rates, extra_currencies=["GBP", "CAD"])
 
 if "from_currency" not in st.session_state:
     st.session_state.from_currency = currencies[0]
@@ -34,6 +30,7 @@ if "to_currency" not in st.session_state:
     st.session_state.to_currency = currencies[1]
 if "history" not in st.session_state:
     st.session_state.history = []
+
 
 def swap_currencies():
     st.session_state.from_currency, st.session_state.to_currency = (
@@ -48,25 +45,15 @@ to_currency = st.selectbox("Vers :", currencies, key="to_currency")
 
 st.button("Inverser les devises", on_click=swap_currencies)
 
-
-#AVANT
-#if st.button("Convertir"):
-    #result = amount * rates[to_currency] / rates[from_currency]
-    #st.success(f"{amount} {from_currency} = {result:.2f} {to_currency}")
-
-
-if st.button("Convertir"): #il s'execute quand user cliquise qur bouton
-      if amount <= 0:      # on verifie que amount ne sois pas inferireur ou = à zero
-          st.error("Le montant doit être supérieur à zéro.")  #afficher message d'erreur rouge (st.error), STOP
-
-      elif from_currency == to_currency:                        # si devis a = devise b
-          st.error("Les deux devises ne peuvent pas être identiques.")  # affihcer message erreur
-
-      else:                                    # sinon
-          result = amount * rates[to_currency] / rates[from_currency] #on ramene en euro ( devise de reference) puis on convertis en devise cible
-          conversion = f"{amount} {from_currency} = {result:.2f} {to_currency}"
-          st.success(conversion)
-          st.session_state.history.append(conversion)
+if st.button("Convertir"):
+    try:
+        result = convert(amount, from_currency, to_currency, rates)
+    except ValueError as e:
+        st.error(str(e))
+    else:
+        conversion = f"{amount} {from_currency} = {result:.2f} {to_currency}"
+        st.success(conversion)
+        st.session_state.history.append(conversion)
 
 if st.session_state.history:
     st.subheader("Historique des conversions")
@@ -74,3 +61,4 @@ if st.session_state.history:
         st.write(entry)
     if st.button("Effacer l'historique"):
         st.session_state.history = []
+        st.rerun()
