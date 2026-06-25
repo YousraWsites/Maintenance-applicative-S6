@@ -1,5 +1,6 @@
 streamlit
 requests
+python-dotenv
 pytest
 flake8
 black
