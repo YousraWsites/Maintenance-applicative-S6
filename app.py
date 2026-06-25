@@ -27,6 +27,8 @@ if "from_currency" not in st.session_state:
     st.session_state.from_currency = currencies[0]
 if "to_currency" not in st.session_state:
     st.session_state.to_currency = currencies[1]
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 
 def swap_currencies():
@@ -41,7 +43,6 @@ from_currency = st.selectbox("De :", currencies, key="from_currency")
 to_currency = st.selectbox("Vers :", currencies, key="to_currency")
 
 st.button("Inverser les devises", on_click=swap_currencies)
-
 
 #AVANT
 #if st.button("Convertir"):
@@ -58,4 +59,13 @@ if st.button("Convertir"): #il s'execute quand user cliquise qur bouton
 
       else:                                    # sinon
           result = amount * rates[to_currency] / rates[from_currency] #on ramene en euro ( devise de reference) puis on convertis en devise cible
-          st.success(f"{amount} {from_currency} = {result:.2f} {to_currency}") #on affihce le resultat
+          conversion = f"{amount} {from_currency} = {result:.2f} {to_currency}"
+          st.success(conversion) #on affihce le resultat
+          st.session_state.history.append(conversion)
+
+if st.session_state.history:
+    st.subheader("Historique des conversions")
+    for entry in reversed(st.session_state.history):
+        st.write(entry)
+    if st.button("Effacer l'historique"):
+        st.session_state.history = []
